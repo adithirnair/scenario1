@@ -9,18 +9,44 @@ const app = Vue.createApp({
                     name: "HOT PINK GLOSS",
                     description: "Beautiful glossy shimmery gloss perfect for your glam look.",
                     price: 25.99,
-                    image: "images/product1.jpg"
+                    image: "images/product1.jpg",
+                    available: true // Add availability property
                 },
                 {
                     id: 2,
                     name: "DEEP RED GLOSS",
                     description: "Make a statement with this deep red shade.",
                     price: 25.99,
-                    image: "images/product2.jpg"
+                    image: "images/product2.jpg",
+                    available: false // Add availability property
                 },
                 // Add more products here
-            ]
+            ],
+            cart: [] // Initialize a cart array
         };
+    },
+    computed: {
+        cartTotal() {
+            // Calculate the total price of items in the cart
+            return this.cart.reduce((total, product) => total + product.price, 0);
+        }
+    },
+    methods: {
+        addToCart(product) {
+            // Add a product to the cart
+            this.cart.push(product);
+            this.$emit('add-to-cart', product);
+        },
+        removeFromCart(product) {
+            // Remove a product from the cart
+            const index = this.cart.indexOf(product);
+            if (index !== -1) {
+                this.cart.splice(index, 1);
+            }
+        }
+    },
+    created() {
+        console.log("Vue app is created.");
     }
 });
 
@@ -33,10 +59,40 @@ app.component('product-card', {
             <h2>{{ product.name }}</h2>
             <p class="description">{{ product.description }}</p>
             <p class="price">\${{ product.price.toFixed(2) }}</p>
-            <button>Add to Cart</button>
+            <p v-if="product.available">In Stock</p>
+            <p v-else>Out of Stock</p>
+            <button @click="addToCart(product)">Add to Cart</button>
         </div>
     `
 });
 
+
+// Cart component
+app.component('cart', {
+    computed: {
+        cartItemCount() {
+            // Calculate the number of items in the cart
+            return this.$root.cart.length;
+        }
+    },
+    template: `
+        <div class="cart">
+            <h2>Your Cart</h2>
+            <ul>
+                <li v-for="product in $root.cart" :key="product.id">
+                    {{ product.name }} - \${{ product.price.toFixed(2) }}
+                    <button @click="removeFromCart(product)">Remove</button>
+                </li>
+            </ul>
+            <p>Total: \${{ $root.cartTotal.toFixed(2) }}</p>
+        </div>
+    `
+});
+
+
 // Mount the app to an element with the id "product-listings"
-app.mount('#product-listings');
+const mountedApp = app.mount('#product-listings');
+
+// Mount the cart component to an element with the id "cart"
+const cartApp = app.mount('#cart');
+
